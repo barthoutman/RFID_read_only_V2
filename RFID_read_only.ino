@@ -11,7 +11,6 @@ unsigned char setPower[9] = { 0XBB, 0X00, 0XB6, 0X00, 0X02, 0X0A, 0X28, 0XEA, 0X
 //RFID commands
 //**-----------------------------------**
 int setSettings = true;  //set to true to always start with the proper settings
-
 //-------------------------------------**
 //RFID variables
 //-------------------------------------
@@ -24,14 +23,12 @@ unsigned int validReadLength = 0;
 bool isReading = false;
 bool isValidRead = false;
 bool savedValidRead = false;
-bool seeFeedback = false;
 //**-----------------------------------
 //RFID variables
 //**-----------------------------------**
-bool running = true;
 
 int runRFID = 0;
-int runRFIDInterval = 1000;
+int runRFIDInterval = 100;
 unsigned long oldMillis = 0;
 unsigned long newMillis = 0;
 
@@ -44,7 +41,6 @@ void setup() {
 
 void loop() {
   newMillis = millis();
-
   //-----------------------------------------------------preload settings
   if (setSettings == true) {
     delay(200);
@@ -66,14 +62,12 @@ void loop() {
     Serial2.write(ReadSingle, 7);
     readRFID();
     runRFID = 0;
-    running = true;
   }
 }
 //------------------------------------------------------**************
 
 //-----------------------------------------------------handle RFID read input
 void readRFID() {
-  if (!running) return;
 
   while (Serial2.available()) {  //Checks if serial input is available
     unsigned char rc = Serial2.read();
@@ -89,7 +83,7 @@ void readRFID() {
     if (isReading) {
       readData[currentReadLength] = rc;
       if (currentReadLength == 1 && rc == 0X02) {
-        validReadLength = 0;
+        validReadLength = 1;
         isValidRead = true;
         for (int i = 0; i < 32; i++) {  //Loop *lastValidReadData 64 times*
           savedReadData[i] = 0X00;      //Clear all chars
@@ -98,8 +92,8 @@ void readRFID() {
       }
       if (isValidRead) {                      //If incomming data is valid
         savedReadData[validReadLength] = rc;  //Taking the data form *LastValidReadData and putting it in *rc at the position decided by currentReadLength
-        Serial.print(savedReadData[validReadLength], HEX);
-        Serial.print(" ");
+          Serial.print(savedReadData[validReadLength], HEX);
+          Serial.print(" ");
         validReadLength++;  //saving the length of the saved string
       }
 
@@ -114,9 +108,7 @@ void readRFID() {
       Serial.println();
       isValidRead = false;
       savedValidRead = 1;
-      Serial2.flush();
       isReading = false;
-      running = false;
     }
     delay(2);
     Serial2.flush();
