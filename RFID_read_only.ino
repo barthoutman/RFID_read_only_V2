@@ -38,7 +38,7 @@ unsigned long newMillis=0;
 
 void setup(){
   Serial2.begin(115200);
-  Serial.begin(9600);
+  Serial.begin(115200);
   delay(500);
 }
 
