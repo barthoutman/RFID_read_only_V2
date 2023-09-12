@@ -23,20 +23,41 @@ unsigned int validReadLength = 0;
 bool isReading = false;
 bool isValidRead = false;
 bool savedValidRead = false;
+int runRFID = 0;
+int runRFIDInterval = 250;
+unsigned long oldMillisRFID = 0;
+unsigned long newMillis = 0;
+bool getFeedback=true;
 //**-----------------------------------
 //RFID variables
 //**-----------------------------------**
 
-int runRFID = 0;
-int runRFIDInterval = 100;
-unsigned long oldMillis = 0;
-unsigned long newMillis = 0;
+//**-----------------------------------**
+//Barcode variables
+//**-----------------------------------
+const int barPin = 27;
+int barStat = LOW;
+unsigned long oldMillisBar=0;
+bool getFeedbackBar=false;
+
+
+
+
+//**-----------------------------------
+//Barcodes variables
+//**-----------------------------------**
+
+
 
 
 void setup() {
+  pinMode(barPin, OUTPUT);
   Serial2.begin(115200);
+  delay(50);
+  Serial1.begin(9600,SERIAL_8N1,14,12);	
   Serial.begin(115200);
   delay(500);
+
 }
 
 void loop() {
@@ -54,13 +75,14 @@ void loop() {
   }
   //-----------------------------------------------------preload settings************
 
-  if (newMillis - oldMillis >= runRFIDInterval && isReading == false) {
+  if (newMillis - oldMillisRFID >= runRFIDInterval && isReading == false) {
     runRFID = 1;
-    oldMillis = newMillis;
+    oldMillisRFID = newMillis;
   }
   if (runRFID == 1) {
     Serial2.write(ReadSingle, 7);
     readRFID();
+    barInput();
     runRFID = 0;
   }
 }
@@ -92,8 +114,10 @@ void readRFID() {
       }
       if (isValidRead) {                      //If incomming data is valid
         savedReadData[validReadLength] = rc;  //Taking the data form *LastValidReadData and putting it in *rc at the position decided by currentReadLength
+        if(getFeedback==true){
           Serial.print(savedReadData[validReadLength], HEX);
           Serial.print(" ");
+        }
         validReadLength++;  //saving the length of the saved string
       }
 
@@ -105,14 +129,24 @@ void readRFID() {
 
 
     if (rc == 0X7E) {
-      Serial.println();
+      if(getFeedback==true){
+        Serial.println();
+      }  
       isValidRead = false;
       savedValidRead = 1;
       isReading = false;
     }
-    delay(2);
+    delay(5);
     Serial2.flush();
-    Serial.flush();
+    if(getFeedback==true){
+      Serial.flush();
+    }
   }
   //------------------------------------------------------**************
+}
+
+void barInput(){
+
+
+  
 }
