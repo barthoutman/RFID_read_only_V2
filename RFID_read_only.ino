@@ -36,7 +36,7 @@ bool getFeedback=true;
 //Barcode variables
 //**-----------------------------------
 const int barPin = 27;
-int barStat = LOW;
+int barState = LOW;
 unsigned long oldMillisBar=0;
 bool getFeedbackBar=false;
 
@@ -156,6 +156,13 @@ void readRFID() {
 
 void barInput(){
 
+  digitalWrite(barPin, HIGH);
+  if (newMillis - oldMillisBar >= 10000 && barPin == HIGH) {
+    digitalWrite(barPin, LOW);
+    delay(50);
+    oldMillisBar = newMillis;
+  }
+
   while (Serial.available()){
     barIsReading=true;
     if (barEndOfRead==false){
@@ -164,6 +171,8 @@ void barInput(){
       if (barCurrentReadLength==12){
         Serial.print("Barcode: ");
         barEndOfRead=true;
+        digitalWrite(barPin, LOW);
+        delay(50);
         for(int i=0; i<12; i++){
           barSavedData[i]=barScanCode[i];
           epccodeBar[i]=barScanCode[i];
@@ -179,6 +188,7 @@ void barInput(){
       {
         barCurrentReadLength=0;
         barEndOfRead = false;
+        barIsReading = false;
         for(int i = 0; i<12; i++)
           {
             barScanCode[i]=0;
