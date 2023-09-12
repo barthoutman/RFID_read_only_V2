@@ -40,6 +40,14 @@ int barStat = LOW;
 unsigned long oldMillisBar=0;
 bool getFeedbackBar=false;
 
+unsigned char barScanCode[12];															//char that stores the imcomming data trough the barcode scanner
+unsigned char barSavedData[12];														//Saving the data out of barScanCode 
+unsigned int barCurrentReadLength=0;													//used to store the incomming data in the correct location in scanCode
+bool barIsReading=false;																//barcode has been read or not
+bool barEndOfRead=false;																//stops saving the incoming data after barCurrentReadLength == 12
+long barScanTimer=0;																		//makes a non blocking pause in the bar code scanner after it has succesfully read a code
+unsigned char epccodeBar[12];	
+
 
 
 
@@ -54,8 +62,8 @@ void setup() {
   pinMode(barPin, OUTPUT);
   Serial2.begin(115200);
   delay(50);
-  Serial1.begin(9600,SERIAL_8N1,14,12);	
-  Serial.begin(115200);
+  //Serial1.begin(9600,SERIAL_8N1,14,12);	
+  Serial.begin(9600);
   delay(500);
 
 }
@@ -107,6 +115,7 @@ void readRFID() {
       if (currentReadLength == 1 && rc == 0X02) {
         validReadLength = 1;
         isValidRead = true;
+        Serial.print("RFID: ");
         for (int i = 0; i < 32; i++) {  //Loop *lastValidReadData 64 times*
           savedReadData[i] = 0X00;      //Clear all chars
         }
@@ -147,6 +156,33 @@ void readRFID() {
 
 void barInput(){
 
+  while (Serial.available()){
+    barIsReading=true;
+    if (barEndOfRead==false){
+      unsigned char sc = Serial.read();
+      barScanCode[barCurrentReadLength] = sc;
+      if (barCurrentReadLength==12){
+        Serial.print("Barcode: ");
+        barEndOfRead=true;
+        for(int i=0; i<12; i++){
+          barSavedData[i]=barScanCode[i];
+          epccodeBar[i]=barScanCode[i];
+          Serial.print(barSavedData[i]);
+          Serial.print(" ");
+          if(i==11){Serial.println();}
+        }
+      }
+    }
 
-  
+    barCurrentReadLength++;  
+      if(barEndOfRead == true)
+      {
+        barCurrentReadLength=0;
+        barEndOfRead = false;
+        for(int i = 0; i<12; i++)
+          {
+            barScanCode[i]=0;
+          }
+      }
+  }
 }
