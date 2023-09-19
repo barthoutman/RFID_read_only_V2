@@ -88,9 +88,8 @@ void loop() {
     oldMillisRFID = newMillis;
   }
   if (runRFID == 1) {
-    //Serial2.write(ReadSingle, 7);
-    //readRFID();
-    //digitalWrite(barPin, LOW);
+    Serial2.write(ReadSingle, 7);
+    readRFID();
     delay(100);
     barInput();
     runRFID = 0;
