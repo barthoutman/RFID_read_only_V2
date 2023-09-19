@@ -88,8 +88,10 @@ void loop() {
     oldMillisRFID = newMillis;
   }
   if (runRFID == 1) {
-    Serial2.write(ReadSingle, 7);
-    readRFID();
+    //Serial2.write(ReadSingle, 7);
+    //readRFID();
+    //digitalWrite(barPin, LOW);
+    delay(100);
     barInput();
     runRFID = 0;
   }
@@ -156,19 +158,21 @@ void readRFID() {
 
 void barInput(){
 
-  digitalWrite(barPin, HIGH);
   if (newMillis - oldMillisBar >= 10000 && barPin == HIGH) {
     digitalWrite(barPin, LOW);
     delay(50);
     oldMillisBar = newMillis;
   }
 
+  digitalWrite(barPin, HIGH);
+  delay(100);
+
   while (Serial.available()){
     barIsReading=true;
     if (barEndOfRead==false){
       unsigned char sc = Serial.read();
       barScanCode[barCurrentReadLength] = sc;
-      if (barCurrentReadLength==12){
+      if (barCurrentReadLength>11){
         Serial.print("Barcode: ");
         barEndOfRead=true;
         digitalWrite(barPin, LOW);
@@ -180,6 +184,7 @@ void barInput(){
           Serial.print(" ");
           if(i==11){Serial.println();}
         }
+        delay(100);  
       }
     }
 
@@ -194,5 +199,6 @@ void barInput(){
             barScanCode[i]=0;
           }
       }
+      Serial.flush();
   }
 }
