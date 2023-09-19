@@ -47,22 +47,20 @@ bool barIsReading=false;																//barcode has been read or not
 bool barEndOfRead=false;																//stops saving the incoming data after barCurrentReadLength == 12
 long barScanTimer=0;																		//makes a non blocking pause in the bar code scanner after it has succesfully read a code
 unsigned char epccodeBar[12];	
-
-
-
-
 //**-----------------------------------
 //Barcodes variables
 //**-----------------------------------**
+
+const int userButton = 26;
 
 
 
 
 void setup() {
   pinMode(barPin, OUTPUT);
+  pinMode(userButton, INPUT);
   Serial2.begin(115200);
   delay(50);
-  //Serial1.begin(9600,SERIAL_8N1,14,12);	
   Serial.begin(9600);
   delay(500);
 
@@ -88,11 +86,15 @@ void loop() {
     oldMillisRFID = newMillis;
   }
   if (runRFID == 1) {
+    Serial.println(userButton);
+
+    /*
     Serial2.write(ReadSingle, 7);
     readRFID();
-    delay(100);
+    delay(10);
     barInput();
     runRFID = 0;
+    */
   }
 }
 //------------------------------------------------------**************
@@ -146,7 +148,7 @@ void readRFID() {
       savedValidRead = 1;
       isReading = false;
     }
-    delay(5);
+    delay(2);
     Serial2.flush();
     if(getFeedback==true){
       Serial.flush();
@@ -164,14 +166,14 @@ void barInput(){
   }
 
   digitalWrite(barPin, HIGH);
-  delay(100);
+  delay(10);
 
   while (Serial.available()){
     barIsReading=true;
     if (barEndOfRead==false){
       unsigned char sc = Serial.read();
       barScanCode[barCurrentReadLength] = sc;
-      if (barCurrentReadLength>11){
+      if (barCurrentReadLength>=12 && barScanCode[12]==13){
         Serial.print("Barcode: ");
         barEndOfRead=true;
         digitalWrite(barPin, LOW);
@@ -181,7 +183,7 @@ void barInput(){
           epccodeBar[i]=barScanCode[i];
           Serial.print(barSavedData[i]);
           Serial.print(" ");
-          if(i==11){Serial.println();}
+          if(i>=11){Serial.println();}
         }
         delay(100);  
       }
