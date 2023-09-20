@@ -46,7 +46,7 @@ unsigned int barCurrentReadLength=0;													//used to store the incomming d
 bool barIsReading=false;																//barcode has been read or not
 bool barEndOfRead=false;																//stops saving the incoming data after barCurrentReadLength == 12
 long barScanTimer=0;																		//makes a non blocking pause in the bar code scanner after it has succesfully read a code
-unsigned char epccodeBar[12];	
+unsigned char epcCodeBar[12];	
 //**-----------------------------------
 //Barcodes variables
 //**-----------------------------------**
@@ -54,6 +54,8 @@ unsigned char epccodeBar[12];
 const int userButton=26;
 int userButtonState=0;
 bool runBarInput=false;
+
+int statusCount = 0;                                  // 0: startup| 1: turned on| 2: send barcode read command| 3: scanning Barcode| 4: Barcode scanned succesfully| 5: RFID read command sent| 6: RFID read succesful| 7: Building Write command| 8: Command build succesful| 9: RFID Write command sent| 10: RFID Write succesful| 11: RFID read command sent| 12: Comparing string (RFID EPC, and barcode)| 13: RFID write correct 
 
 
 void setup() {
@@ -86,22 +88,27 @@ void loop() {
     oldMillisRFID = newMillis;
   }
 
+  statusCount = 1;
+
   userButtonState = digitalRead(userButton);
   if (userButtonState==HIGH) {
     runBarInput=true;
     barInput();
-    /*
-    Serial2.write(ReadSingle, 7);
-    readRFID();
-    delay(10);
-    barInput();
-    runRFID = 0;
-    */
+    statusCount = 2;
   }
+
   if (userButtonState==LOW) {
     runBarInput=false;
     digitalWrite(barPin, LOW);
   }
+
+
+    /*
+    Serial2.write(ReadSingle, 7);
+    readRFID();
+    delay(10);
+    runRFID = 0;
+    */
 }
 //------------------------------------------------------**************
 
@@ -177,6 +184,7 @@ void barInput(){
     delay(10);
 
     while (Serial.available()){
+      statusCount = 3;
      barIsReading=true;
       if (barEndOfRead==false){
         unsigned char sc = Serial.read();
@@ -188,12 +196,13 @@ void barInput(){
           delay(50);
           for(int i=0; i<12; i++){
             barSavedData[i]=barScanCode[i];
-            epccodeBar[i]=barScanCode[i];
-            Serial.print(barSavedData[i]);
+            epcCodeBar[i]=barScanCode[i];
+            Serial.print(epcCodeBar[i]);
             Serial.print(" ");
             if(i>=11){Serial.println();}
           }
-          delay(50);  
+          delay(50); 
+          statusCount = 4; 
         }
       }
 
