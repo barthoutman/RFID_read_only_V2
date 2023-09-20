@@ -102,13 +102,12 @@ void loop() {
     digitalWrite(barPin, LOW);
   }
 
-
-    /*
+  if (statusCount == 4){
     Serial2.write(ReadSingle, 7);
     readRFID();
     delay(10);
     runRFID = 0;
-    */
+  }
 }
 //------------------------------------------------------**************
 
