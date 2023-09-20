@@ -51,14 +51,14 @@ unsigned char epccodeBar[12];
 //Barcodes variables
 //**-----------------------------------**
 
-const int userButton = 26;
-
-
+const int userButton=26;
+int userButtonState=0;
+bool runBarInput=false;
 
 
 void setup() {
-  pinMode(barPin, OUTPUT);
-  pinMode(userButton, INPUT);
+  pinMode(barPin,OUTPUT);
+  pinMode(userButton,INPUT_PULLDOWN);
   Serial2.begin(115200);
   delay(50);
   Serial.begin(9600);
@@ -85,9 +85,11 @@ void loop() {
     runRFID = 1;
     oldMillisRFID = newMillis;
   }
-  if (runRFID == 1) {
-    Serial.println(userButton);
 
+  userButtonState = digitalRead(userButton);
+  if (userButtonState==HIGH) {
+    runBarInput=true;
+    barInput();
     /*
     Serial2.write(ReadSingle, 7);
     readRFID();
@@ -95,6 +97,10 @@ void loop() {
     barInput();
     runRFID = 0;
     */
+  }
+  else {
+    runBarInput=false;
+    digitalWrite(barPin, LOW);
   }
 }
 //------------------------------------------------------**************
@@ -158,48 +164,59 @@ void readRFID() {
 }
 
 void barInput(){
-
+/*
   if (newMillis - oldMillisBar >= 10000 && barPin == HIGH) {
     digitalWrite(barPin, LOW);
     delay(50);
     oldMillisBar = newMillis;
   }
+*/
 
-  digitalWrite(barPin, HIGH);
-  delay(10);
+  if(runBarInput==true){
+    digitalWrite(barPin, HIGH);
+    delay(10);
 
-  while (Serial.available()){
-    barIsReading=true;
-    if (barEndOfRead==false){
-      unsigned char sc = Serial.read();
-      barScanCode[barCurrentReadLength] = sc;
-      if (barCurrentReadLength>=12 && barScanCode[12]==13){
-        Serial.print("Barcode: ");
-        barEndOfRead=true;
-        digitalWrite(barPin, LOW);
-        delay(50);
-        for(int i=0; i<12; i++){
-          barSavedData[i]=barScanCode[i];
-          epccodeBar[i]=barScanCode[i];
-          Serial.print(barSavedData[i]);
-          Serial.print(" ");
-          if(i>=11){Serial.println();}
-        }
-        delay(100);  
-      }
-    }
-
-    barCurrentReadLength++;  
-      if(barEndOfRead == true)
-      {
-        barCurrentReadLength=0;
-        barEndOfRead = false;
-        barIsReading = false;
-        for(int i = 0; i<12; i++)
-          {
-            barScanCode[i]=0;
+    while (Serial.available()){
+     barIsReading=true;
+      if (barEndOfRead==false){
+        unsigned char sc = Serial.read();
+        barScanCode[barCurrentReadLength] = sc;
+        if (barCurrentReadLength>=12 && barScanCode[12]==13){
+          Serial.print("Barcode: ");
+          barEndOfRead=true;
+          digitalWrite(barPin, LOW);
+          delay(50);
+          for(int i=0; i<12; i++){
+            barSavedData[i]=barScanCode[i];
+            epccodeBar[i]=barScanCode[i];
+            Serial.print(barSavedData[i]);
+            Serial.print(" ");
+            if(i>=11){Serial.println();}
           }
+          delay(50);  
+        }
       }
-      Serial.flush();
+
+      barCurrentReadLength++;  
+        if(barEndOfRead == true)
+       {
+          barCurrentReadLength=0;
+          barEndOfRead = false;
+          barIsReading = false;
+          for(int i = 0; i<12; i++)
+            {
+              barScanCode[i]=0;
+           }
+        }
+        Serial.flush();
+    }
+  }
+
+  else {
+    barIsReading = false;
+    for(int i=0; i<12; i++){
+      barScanCode[i]=0;
+      digitalWrite(barPin, LOW);
+    }
   }
 }
