@@ -98,7 +98,7 @@ void loop() {
     runRFID = 0;
     */
   }
-  else {
+  if (userButtonState==LOW) {
     runBarInput=false;
     digitalWrite(barPin, LOW);
   }
