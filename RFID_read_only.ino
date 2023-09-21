@@ -159,8 +159,8 @@ void readRFID() {
         validReadLength++;  //saving the length of the saved string
       }
 
-      if (validReadLength > 7 && validReadLength < 20) {             //Taking out the EPC code from the whole string of incomming data after reading
-        readEpc[validReadLength - 8] = readData[currentReadLength];  //Removing the first 8 characters from the incomming data and saving this in *readepc
+      if (validReadLength > 7 && validReadLength < 21) {             //Taking out the EPC code from the whole string of incomming data after reading
+        readEpc[validReadLength - 9] = readData[currentReadLength];  //Removing the first 8 characters from the incomming data and saving this in *readepc
       }
     }
     currentReadLength++;
@@ -172,6 +172,12 @@ void readRFID() {
       }  
       if (isValidRead == true){
         statusCount = 6;
+        Serial.print("EPC: ");
+        for (int i = 0; i < 12; i++){
+          Serial.print(readEpc[i], HEX);
+          Serial.print(" ");
+          if(i==11){Serial.println();}
+        }
       }
       isValidRead = false;
       savedValidRead = 1;
