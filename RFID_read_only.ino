@@ -256,11 +256,40 @@ void readRFID() {
 
 void buildWriteCommand() {
 
+unsigned char RFIDLabel::generateChecksum(int cStart, int cEnd, unsigned char* dataArray) {						//Run the checksum calculation
+	long int dataCounter = 0;																					//Start the *dataCounter at 0. This adds up to be the total sum of all dataArray data.
+	for(int i = cStart; i < cEnd; i++) {																		//Loop through the whole write data to calculate what the checksum should be
+		dataCounter += (int)dataArray[i];																		//Add dataArray up as an int instead of a char at the value of the location placed by *i
+	}
+	return dataCounter % 256;																					//Devide datacounter bij 256 and take the rest. This way the number here can never be higher then 256
+}
 
+  writeRFIDData[0] = 0XBB;    // Header
+  writeRFIDData[1] = 0X00;    // Type
+  writeRFIDData[2] = 0X49;    // Command (write)
+  writeRFIDData[3] = 0X00;    // Parameter length (1/2)
+  writeRFIDData[4] = 0X19;    // Parameter length (2/2) Total length is 25 -> Hex 0X19
 
+  writeRFIDData[5] = 0X00;    //Passcode 1/4
+  writeRFIDData[6] = 0X00;    //Passcode 2/4
+  writeRFIDData[7] = 0X00;    //Passcode 3/4
+  writeRFIDData[8] = 0X00;    //Passcode 4/4
 
+  writeRFIDData[9] = 0X01;    // Memory bank (00 is RFU, 01 is EPC, 10 is TID and 11 is USER)
+  writeRFIDData[10] = 0X00;   // Memory address offset 1/2
+  writeRFIDData[11] = 0X00;   // Memory address offset 1/2
+  writeRFIDData[12] = 0X00;   // Data length 1/2
+  writeRFIDData[13] = 0X08;   // Data length 1/2
 
+  writeRFIDData[14] = 0XBB;   // crc code 1/2
+  writeRFIDData[15] = 0XBB;   // crc code 1/2
 
+  for (int i = 0; i<12; i++){
+    writeRFIDData[16+i] = epcCodeBar[i];   //12x EPC from Barcode scanner from barInput()
+  }
+
+	writeRFIDData[28] = RFIDLabel::generateChecksum(1, 30, writeRFIDData);
+	writeRFIDData[29] = 0X7E;
 
 
 }
