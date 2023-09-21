@@ -24,7 +24,7 @@ bool isReading = false;
 bool isValidRead = false;
 bool savedValidRead = false;
 int runRFID = 0;
-int runRFIDInterval = 150;
+int runRFIDInterval = 100;
 unsigned long oldMillisRFID = 0;
 unsigned long newMillis = 0;
 bool getFeedback=true;
@@ -56,7 +56,8 @@ int userButtonState=0;
 bool runBarInput=false;
 
 int statusCount = 0;                                  // 0: startup| 1: turned on| 2: send barcode read command| 3: scanning Barcode| 4: Barcode scanned succesfully| 5: RFID read command sent| 6: RFID read succesful| 7: Building Write command| 8: Command build succesful| 9: RFID Write command sent| 10: RFID Write succesful| 11: RFID read command sent| 12: Comparing string (RFID EPC, and barcode)| 13: RFID write correct 
-
+int printStatusCountTimer = 500;
+unsigned long oldMillisStatusPrinter = 0;
 
 void setup() {
   pinMode(barPin,OUTPUT);
@@ -83,18 +84,19 @@ void loop() {
   }
   //-----------------------------------------------------preload settings************
 
-  if (newMillis - oldMillisRFID >= runRFIDInterval && isReading == false) {
+  if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
     runRFID = 1;
-    oldMillisRFID = newMillis;
+    oldMillisStatusPrinter = newMillis; 
+    Serial.println(statusCount);
   }
-
-  statusCount = 1;
+ 
+  if (statusCount< 1) statusCount = 1;
 
   userButtonState = digitalRead(userButton);
   if (userButtonState==HIGH) {
     runBarInput=true;
     barInput();
-    statusCount = 2;
+    if (statusCount==1)statusCount = 2;
   }
 
   if (userButtonState==LOW) {
@@ -102,11 +104,23 @@ void loop() {
     digitalWrite(barPin, LOW);
   }
 
-  if (statusCount == 4){
+  if (statusCount == 4 && userButtonState == LOW){
     Serial2.write(ReadSingle, 7);
     readRFID();
     delay(10);
     runRFID = 0;
+    int isSent = 1;
+
+    if (isSent==1){
+      oldMillisRFID = newMillis;
+    }
+
+    if (newMillis - oldMillisRFID >= runRFIDInterval) {
+      runRFID = 1;
+      oldMillisRFID = newMillis; 
+      if (statusCount==4)statusCount = 5;
+      isSent==0;
+    }
   }
 }
 //------------------------------------------------------**************
@@ -152,10 +166,13 @@ void readRFID() {
     currentReadLength++;
 
 
-    if (rc == 0X7E) {
+    if (rc == 0X7E && isValidRead) {
       if(getFeedback==true){
         Serial.println();
       }  
+      if (isValidRead == true){
+        statusCount = 6;
+      }
       isValidRead = false;
       savedValidRead = 1;
       isReading = false;
@@ -183,7 +200,7 @@ void barInput(){
     delay(10);
 
     while (Serial.available()){
-      statusCount = 3;
+      if (statusCount==2)statusCount = 3;
      barIsReading=true;
       if (barEndOfRead==false){
         unsigned char sc = Serial.read();
