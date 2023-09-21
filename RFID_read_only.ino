@@ -11,8 +11,28 @@ unsigned char setPower[9] = { 0XBB, 0X00, 0XB6, 0X00, 0X02, 0X0A, 0X28, 0XEA, 0X
 //RFID commands
 //**-----------------------------------**
 int setSettings = true;  //set to true to always start with the proper settings
+
+//**-----------------------------------**
+//barInput variables
+//**-----------------------------------
+const int barPin = 27;
+int barState = LOW;
+unsigned long oldMillisBar=0;
+bool getFeedbackBar=false;
+
+unsigned char barScanCode[12];															//char that stores the imcomming data trough the barcode scanner
+unsigned char barSavedData[12];														//Saving the data out of barScanCode 
+unsigned int barCurrentReadLength=0;													//used to store the incomming data in the correct location in scanCode
+bool barIsReading=false;																//barcode has been read or not
+bool barEndOfRead=false;																//stops saving the incoming data after barCurrentReadLength == 12
+long barScanTimer=0;																		//makes a non blocking pause in the bar code scanner after it has succesfully read a code
+unsigned char epcCodeBar[12];	
+//**-----------------------------------
+//barInput variables
+//**-----------------------------------**
+
 //-------------------------------------**
-//RFID variables
+//readRFID variables
 //-------------------------------------
 unsigned char readData[32];
 unsigned char savedReadData[32];
@@ -29,27 +49,17 @@ unsigned long oldMillisRFID = 0;
 unsigned long newMillis = 0;
 bool getFeedback=true;
 //**-----------------------------------
-//RFID variables
+//readRFID variables
 //**-----------------------------------**
 
 //**-----------------------------------**
-//Barcode variables
+//readRFID variables
 //**-----------------------------------
-const int barPin = 27;
-int barState = LOW;
-unsigned long oldMillisBar=0;
-bool getFeedbackBar=false;
-
-unsigned char barScanCode[12];															//char that stores the imcomming data trough the barcode scanner
-unsigned char barSavedData[12];														//Saving the data out of barScanCode 
-unsigned int barCurrentReadLength=0;													//used to store the incomming data in the correct location in scanCode
-bool barIsReading=false;																//barcode has been read or not
-bool barEndOfRead=false;																//stops saving the incoming data after barCurrentReadLength == 12
-long barScanTimer=0;																		//makes a non blocking pause in the bar code scanner after it has succesfully read a code
-unsigned char epcCodeBar[12];	
+unsigned char writeRFIDData [32];
 //**-----------------------------------
-//Barcodes variables
+//readRFID variables
 //**-----------------------------------**
+
 
 const int userButton=26;
 int userButtonState=0;
@@ -125,13 +135,6 @@ void loop() {
 //------------------------------------------------------**************
 
 void barInput(){
-/*
-  if (newMillis - oldMillisBar >= 10000 && barPin == HIGH) {
-    digitalWrite(barPin, LOW);
-    delay(50);
-    oldMillisBar = newMillis;
-  }
-*/
 
   if(runBarInput==true){
     digitalWrite(barPin, HIGH);
@@ -249,4 +252,15 @@ void readRFID() {
     }
   }
   //------------------------------------------------------**************
+}
+
+void buildWriteCommand() {
+
+
+
+
+
+
+
+
 }
