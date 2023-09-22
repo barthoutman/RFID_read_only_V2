@@ -96,8 +96,7 @@ void loop() {
   if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
     runRFID = 1;
     oldMillisStatusPrinter = newMillis; 
-    Serial.println(statusCount);
-    Serial.println(writeRFIDData[30],HEX);
+    //Serial.println(statusCount);
     if (statusCount==6){
       buildWriteCommand();
       delay(50);
@@ -138,13 +137,21 @@ void loop() {
   }
 
   if( statusCount==7 && userButtonState== LOW){
-          for(int i=0; i < 32; i++){
+    for(int i=0; i < 32; i++){
       Serial.print(writeRFIDData[i], HEX);
       Serial.print(" ");
-      if(i==31){Serial.println();}
+      if(i==31){Serial.println();
+      statusCount = 8;}
       }
-      statusCount = 8;
   }    
+
+  if(statusCount==8 && userButtonState == LOW){
+    Serial2.write(writeRFIDData, 32);
+    delay(200);
+        Serial2.write(ReadSingle, 7);
+    readRFID();
+  }
+
   
 }
 //------------------------------------------------------**************
