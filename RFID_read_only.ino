@@ -97,6 +97,11 @@ void loop() {
     runRFID = 1;
     oldMillisStatusPrinter = newMillis; 
     Serial.println(statusCount);
+    Serial.println(writeRFIDData[30],HEX);
+    if (statusCount==6){
+      buildWriteCommand();
+      delay(50);
+    }
   }
  
   if (statusCount< 1) statusCount = 1;
@@ -131,6 +136,16 @@ void loop() {
       isSent==0;
     }
   }
+
+  if( statusCount==7 && userButtonState== LOW){
+          for(int i=0; i < 32; i++){
+      Serial.print(writeRFIDData[i], HEX);
+      Serial.print(" ");
+      if(i==31){Serial.println();}
+      }
+      statusCount = 8;
+  }    
+  
 }
 //------------------------------------------------------**************
 
@@ -268,7 +283,7 @@ void buildWriteCommand() {
   writeRFIDData[1] = 0X00;    // Type
   writeRFIDData[2] = 0X49;    // Command (write)
   writeRFIDData[3] = 0X00;    // Parameter length (1/2) Length from Passcode 1/4 up to the end of the EPC
-  writeRFIDData[4] = 0X17;    // Parameter length (2/2) Total length is 23 -> Hex 0X17 
+  writeRFIDData[4] = 0X19;    // Parameter length (2/2) Total length is 25 -> Hex 0X19 
 
   writeRFIDData[5] = 0X00;    //Passcode 1/4
   writeRFIDData[6] = 0X00;    //Passcode 2/4
@@ -293,4 +308,5 @@ void buildWriteCommand() {
 
 	writeRFIDData[30] = generateChecksum(1, 30, writeRFIDData);
 	writeRFIDData[31] = 0X7E;
+  statusCount = 7;
 }
