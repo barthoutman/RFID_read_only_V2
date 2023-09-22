@@ -150,6 +150,13 @@ void loop() {
     delay(200);
         Serial2.write(ReadSingle, 7);
     readRFID();
+    
+	  for(int i = 0; i < 12; i++) {													//Loop through the whole length one by one
+		  if(epcCodeBar[i] == writeRFIDData[18+i]){
+        statusCount=9;
+      }										
+	  }
+
   }
 
   
