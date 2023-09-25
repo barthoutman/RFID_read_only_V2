@@ -53,12 +53,12 @@ bool getFeedback=true;
 //**-----------------------------------**
 
 //**-----------------------------------**
-//writeRFID variables
+//readRFID variables
 //**-----------------------------------
 unsigned char writeRFIDData [32];
-bool correctWrite = false;
+int writeTrieCounter=0;
 //**-----------------------------------
-//writeRFID variables
+//readRFID variables
 //**-----------------------------------**
 
 
@@ -97,13 +97,18 @@ void loop() {
   if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
     runRFID = 1;
     oldMillisStatusPrinter = newMillis; 
+    Serial.print("statusCount: ");
     Serial.println(statusCount);
+    if (!compareStrings()){
+    Serial.print("compareStrings: ");
+    Serial.println(compareStrings());
+    }
+  }
+
     if (statusCount==6){
       buildWriteCommand();
       delay(50);
     }
-  }
- 
   if (statusCount< 1) statusCount = 1;
 
   userButtonState = digitalRead(userButton);
@@ -147,24 +152,29 @@ void loop() {
   }    
 
   if(statusCount==8 && userButtonState == LOW){
-    compareStrings();
-    if (compareStrings()==false){
     Serial2.write(writeRFIDData, 32);
     delay(200);
-    Serial2.flush();
         Serial2.write(ReadSingle, 7);
-    readRFID();  
-    Serial2.flush();
-    }  
-    else{statusCount=9;}
-  if (statusCount > 7 && userButtonState==HIGH){
-    statusCount = 2;
+    readRFID();
+    compareStrings();
+    writeTrieCounter++;
+    if(writeTrieCounter >=10){
+      statusCount=1;
+      writeTrieCounter=0;
     }
   }
-  
-  
+  if(compareStrings() == true && writeTrieCounter >= 1){
+    statusCount=1;
+    writeTrieCounter=0;
+    Serial.print("EPC after write: ");
+    for(int i3=0; i3<12; i3++){
+      Serial.print(savedReadData[i3+8],HEX);
+      Serial.print(" ");
+      if(i3=12){Serial.println();}     
+    }
+  }
 
-
+  
 }
 //------------------------------------------------------**************
 
@@ -330,11 +340,9 @@ void buildWriteCommand() {
   statusCount = 7;
 }
 
-bool compareStrings(){
+bool compareStrings() {					//Check if the read EPC code is the same as the EPC code we wanted to write
 	for(int i = 0; i < 12; i++) {													//Loop through the whole length one by one
-		if(epcCodeBar[i] == !writeRFIDData[18+i]){
-      return false;
-    }	
-  }	
-  return true;							
+		if(readEpc[i] != epcCodeBar[i]) return false;												//If the single char in the current specific location in the read string is not the same as the single char in the written string *compareString is false
+	}
+	return true;																		//if *c1 and *c2 ar true. *compareString is true
 }
