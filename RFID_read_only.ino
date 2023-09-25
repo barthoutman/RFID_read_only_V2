@@ -53,11 +53,12 @@ bool getFeedback=true;
 //**-----------------------------------**
 
 //**-----------------------------------**
-//readRFID variables
+//writeRFID variables
 //**-----------------------------------
 unsigned char writeRFIDData [32];
+bool correctWrite = false;
 //**-----------------------------------
-//readRFID variables
+//writeRFID variables
 //**-----------------------------------**
 
 
@@ -96,7 +97,7 @@ void loop() {
   if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
     runRFID = 1;
     oldMillisStatusPrinter = newMillis; 
-    //Serial.println(statusCount);
+    Serial.println(statusCount);
     if (statusCount==6){
       buildWriteCommand();
       delay(50);
@@ -146,20 +147,24 @@ void loop() {
   }    
 
   if(statusCount==8 && userButtonState == LOW){
+    compareStrings();
+    if (compareStrings()==false){
     Serial2.write(writeRFIDData, 32);
     delay(200);
+    Serial2.flush();
         Serial2.write(ReadSingle, 7);
-    readRFID();
-    
-	  for(int i = 0; i < 12; i++) {													//Loop through the whole length one by one
-		  if(epcCodeBar[i] == writeRFIDData[18+i]){
-        statusCount=9;
-      }										
-	  }
-
+    readRFID();  
+    Serial2.flush();
+    }  
+    else{statusCount=9;}
+  if (statusCount > 7 && userButtonState==HIGH){
+    statusCount = 2;
+    }
   }
-
   
+  
+
+
 }
 //------------------------------------------------------**************
 
@@ -323,4 +328,13 @@ void buildWriteCommand() {
 	writeRFIDData[30] = generateChecksum(1, 30, writeRFIDData);
 	writeRFIDData[31] = 0X7E;
   statusCount = 7;
+}
+
+bool compareStrings(){
+	for(int i = 0; i < 12; i++) {													//Loop through the whole length one by one
+		if(epcCodeBar[i] == !writeRFIDData[18+i]){
+      return false;
+    }	
+  }	
+  return true;							
 }
