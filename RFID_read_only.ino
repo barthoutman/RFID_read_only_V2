@@ -257,6 +257,7 @@ void readRFID() {
         readEpc[validReadLength - 9] = readData[currentReadLength];  //Removing the first 8 characters from the incomming data and saving this in *readepc
       }
     }
+    else{return;}
     currentReadLength++;
 
 
