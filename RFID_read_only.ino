@@ -182,13 +182,6 @@ void loop() {
 //------------------------------------------------------**************
 
 void barInput(){
-/*
-  if (newMillis - oldMillisBar >= 10000 && barPin == HIGH) {
-    digitalWrite(barPin, LOW);
-    delay(50);
-    oldMillisBar = newMillis;
-  }
-*/
 
   if(runBarInput==true){
     digitalWrite(barPin, HIGH);
