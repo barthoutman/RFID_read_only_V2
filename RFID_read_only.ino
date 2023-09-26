@@ -79,11 +79,11 @@ void loop() {
   //-----------------------------------------------------preload settings
   if (setSettings == true) {
     delay(50);
-    Serial.write(setRegion, 8);
+    Serial2.write(setRegion, 8);
     delay(50);
-    Serial.write(setModeHighSens, 8);
+    Serial2.write(setModeDense, 8);
     delay(50);
-    Serial.write(setPower20, 9);
+    Serial2.write(setPower12, 9);
     delay(50);
     setSettings = false;
   }
@@ -156,6 +156,28 @@ void loop() {
     }
   }
 
+  if (statusCount == 8){
+    Serial2.write(writeRFIDData, 32);
+    writeTrieCounter++;
+    delay(50);
+    Serial2.write(ReadSingle, 7);
+    readRFID();
+    compareStrings();
+    if (compareStrings()){
+      Serial.print("compareStrings: ");
+      Serial.println(compareStrings());
+      statusCount = 14;
+    }
+    else if (writeTrieCounter <= 20){
+      Serial.print("compareStrings: ");
+      Serial.println(compareStrings());
+      statusCount = 8;
+    }
+    else
+    {
+      return;
+    }
+  }
 }
 //------------------------------------------------------**************
 
