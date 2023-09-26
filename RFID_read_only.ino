@@ -84,9 +84,9 @@ void loop()
     delay(50);
     Serial2.write(setRegion, 8);
     delay(50);
-    Serial2.write(setModeDense, 8);
+    Serial2.write(setModeHighSens, 8);
     delay(50);
-    Serial2.write(setPower12, 9);
+    Serial2.write(setPower20, 9);
     delay(50);
     setSettings = false;
   }
@@ -109,8 +109,9 @@ void loop()
   {
     runBarInput = true;
     barInput();
-    if (statusCount == 1)
+    if (statusCount == 1){
       statusCount = 2;
+      }
   }
 
   if (userButtonState == LOW)
@@ -159,10 +160,11 @@ void loop()
     }
   }
 
-  if (statusCount == 7)
+  if (statusCount == 7 && userButtonState == LOW)
   {
     buildWriteCommand();
     Serial.print("WriteCommand: ");
+    writeTrieCounter = 0;
     for (int i = 0; i < 32; i++)
     {
       Serial.print(writeRFIDData[i], HEX);
@@ -174,10 +176,12 @@ void loop()
     }
   }
 
-  if (statusCount == 8)
+  if (statusCount == 8 && userButtonState == LOW)
   {
     Serial2.write(writeRFIDData, 32);
     writeTrieCounter++;
+    Serial.print("WriteTries: ");
+    Serial.println(writeTrieCounter);
     delay(50);
     Serial2.write(ReadSingle, 7);
     readRFID();
@@ -187,18 +191,36 @@ void loop()
       Serial.print("compareStrings: ");
       Serial.println(compareStrings());
       statusCount = 14;
+      writeTrieCounter = 0;
     }
-    else if (writeTrieCounter <= 20)
+    else if (writeTrieCounter >= 20)
     {
       Serial.print("compareStrings: ");
       Serial.println(compareStrings());
+      Serial.println("RFID Write Error: --> back to start");
       statusCount = 1;
+      writeTrieCounter = 0;
     }
     else
     {
       return;
     }
   }
+
+  if (statusCount == 14)
+  {
+    Serial.print("Write succesfull: ");
+    for (int i =0; i < 12; i++){
+      Serial.print(readEpc[i], HEX);
+      Serial.print(" ");
+      if(i == 11){
+        Serial.println();
+      }
+    }
+    delay(200);
+    statusCount = 1;
+  }
+
 }
 //------------------------------------------------------**************
 
@@ -237,7 +259,10 @@ void barInput()
             }
           }
           delay(50);
-          statusCount = 4;
+          if (statusCount<4)
+          { 
+            statusCount = 4;
+          }
         }
       }
 
@@ -329,7 +354,10 @@ void readRFID()
       }
       if (isValidRead == true)
       {
-        statusCount = 6;
+        if (statusCount<6)
+        {
+          statusCount = 6;
+        }  
         Serial.print("EPC: ");
         for (int i = 0; i < 12; i++)
         {
