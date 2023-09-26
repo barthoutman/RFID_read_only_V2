@@ -63,25 +63,28 @@ int printStatusCountTimer = 500;  // Timer for printing status
 unsigned long oldMillisStatusPrinter = 0;  // Timer for status printing
 
 void setup() {
-  pinMode(barPin,OUTPUT);
-  pinMode(userButton,INPUT_PULLDOWN);
+  // Initialize GPIO pins
+  pinMode(barPin, OUTPUT);
+  pinMode(userButton, INPUT_PULLDOWN);
+
+  // Initialize Serial communication
   Serial.begin(9600);
   delay(100);
   Serial2.begin(115200);
-  delay(100) ;
+  delay(100);
 }
 
 void loop() {
   newMillis = millis();
   //-----------------------------------------------------preload settings
   if (setSettings == true) {
-    delay(200);
+    delay(50);
     Serial.write(setRegion, 8);
-    delay(200);
+    delay(50);
     Serial.write(setModeHighSens, 8);
-    delay(200);
+    delay(50);
     Serial.write(setPower20, 9);
-    delay(200);
+    delay(50);
     setSettings = false;
   }
   //-----------------------------------------------------preload settings************
