@@ -94,87 +94,102 @@ void loop() {
   }
   //-----------------------------------------------------preload settings************
 
-  if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
+   if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
     runRFID = 1;
     oldMillisStatusPrinter = newMillis; 
     Serial.print("statusCount: ");
-    Serial.println(statusCount);
-    if (!compareStrings()){
-    Serial.print("compareStrings: ");
-    Serial.println(compareStrings());
-    }
+    Serial.println(statusCount);  
+ //   if (!compareStrings()) {
+ //     Serial.print("compareStrings: ");
+ //     Serial.println(compareStrings());
+ //   }
   }
 
-    if (statusCount==6){
-      buildWriteCommand();
-      delay(50);
-    }
-  if (statusCount< 1) statusCount = 1;
+  if (statusCount == 6) {
+    buildWriteCommand();
+    delay(50);
+  }
+
+  if (statusCount < 1) {
+    statusCount = 1;
+  }
 
   userButtonState = digitalRead(userButton);
-  if (userButtonState==HIGH) {
-    runBarInput=true;
+  
+  if (userButtonState == HIGH) {
+    runBarInput = true;
     barInput();
-    if (statusCount==1)statusCount = 2;
+    if (statusCount == 1) {
+      statusCount = 2;
+    }
   }
 
-  if (userButtonState==LOW) {
-    runBarInput=false;
+  if (userButtonState == LOW) {
+    runBarInput = false;
     digitalWrite(barPin, LOW);
   }
 
-  if (statusCount == 4 && userButtonState == LOW){
+  if (statusCount == 4 && userButtonState == LOW) {
     Serial2.write(ReadSingle, 7);
     readRFID();
     delay(10);
     runRFID = 0;
     int isSent = 1;
 
-    if (isSent==1){
+    if (isSent == 1) {
       oldMillisRFID = newMillis;
     }
 
     if (newMillis - oldMillisRFID >= runRFIDInterval) {
       runRFID = 1;
       oldMillisRFID = newMillis; 
-      if (statusCount==4)statusCount = 5;
-      isSent==0;
+      if (statusCount == 4) {
+        statusCount = 5;
+      }
+      isSent = 0; // Corrected from isSent==0;
     }
   }
 
-  if( statusCount==7 && userButtonState== LOW){
-    for(int i=0; i < 32; i++){
+  if (statusCount == 7 && userButtonState == LOW) {
+    Serial.print("WriteRFIDData: ");
+    for (int i = 0; i < 32; i++) {
       Serial.print(writeRFIDData[i], HEX);
       Serial.print(" ");
-      if(i==31){Serial.println();
-      statusCount = 8;}
+      if (i == 31) {
+        Serial.println();
+        statusCount = 8;
       }
+    }
   }    
 
-  if(statusCount==8 && userButtonState == LOW){
+if (statusCount == 8 && userButtonState == LOW) {
     Serial2.write(writeRFIDData, 32);
     delay(200);
-        Serial2.write(ReadSingle, 7);
+    Serial2.write(ReadSingle, 7);
     readRFID();
-    compareStrings();
+//    compareStrings();
     writeTrieCounter++;
-    if(writeTrieCounter >=10){
-      statusCount=1;
-      writeTrieCounter=0;
-    }
-  }
-  if(compareStrings() == true && writeTrieCounter >= 1){
-    statusCount=1;
-    writeTrieCounter=0;
-    Serial.print("EPC after write: ");
-    for(int i3=0; i3<12; i3++){
-      Serial.print(savedReadData[i3+8],HEX);
-      Serial.print(" ");
-      if(i3=12){Serial.println();}     
-    }
-  }
 
-  
+    if (writeTrieCounter >= 25) {
+      Serial.println("Error: Writing RFID data failed.");
+      statusCount = 1;
+      writeTrieCounter = 0;
+    }
+  }
+/*
+  if (compareStrings() && writeTrieCounter >= 1) {
+    statusCount = 1;
+    writeTrieCounter = 0;
+    Serial.print("EPC after write: ");
+    for (int i3 = 0; i3 < 12; i3++) {
+      Serial.print(savedReadData[i3 + 8], HEX);
+      Serial.print(" ");
+      if (i3 == 11) {
+        Serial.println();
+      }
+    }
+  }
+*/
 }
 //------------------------------------------------------**************
 
@@ -257,6 +272,17 @@ void readRFID() {
         savedReadData[0] = 0XBB;  //Write header to lastValidReadData 0XAA
       }
       if (isValidRead) {                      //If incomming data is valid
+        /*
+        if (currentReadLength == 4 && rc == 0X15){
+          for (int i = 0; i < 32; i++) 
+            {readData[i] = 0X00;}
+          statusCount = 1;
+          validReadLength = 1;
+          Serial2.flush();
+          isValidRead = false;
+          isReading = false;
+        }
+        */
         savedReadData[validReadLength] = rc;  //Taking the data form *LastValidReadData and putting it in *rc at the position decided by currentReadLength
         if(getFeedback==true){
           Serial.print(savedReadData[validReadLength], HEX);
@@ -289,7 +315,7 @@ void readRFID() {
       savedValidRead = 1;
       isReading = false;
     }
-    delay(2);
+    delay(3);
     Serial2.flush();
     if(getFeedback==true){
       Serial.flush();
@@ -339,10 +365,11 @@ void buildWriteCommand() {
 	writeRFIDData[31] = 0X7E;
   statusCount = 7;
 }
-
+/*
 bool compareStrings() {					//Check if the read EPC code is the same as the EPC code we wanted to write
 	for(int i = 0; i < 12; i++) {													//Loop through the whole length one by one
 		if(readEpc[i] != epcCodeBar[i]) return false;												//If the single char in the current specific location in the read string is not the same as the single char in the written string *compareString is false
 	}
 	return true;																		//if *c1 and *c2 ar true. *compareString is true
 }
+*/
