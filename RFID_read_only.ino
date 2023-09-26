@@ -171,7 +171,7 @@ void loop() {
     else if (writeTrieCounter <= 20){
       Serial.print("compareStrings: ");
       Serial.println(compareStrings());
-      statusCount = 8;
+      statusCount = 1;
     }
     else
     {
