@@ -95,7 +95,9 @@ void loop() {
     Serial.println(statusCount);
   }
  
-  if (statusCount < 1) statusCount = 1;
+  if (statusCount < 1) {
+    statusCount = 1;
+  }
 
   userButtonState = digitalRead(userButton);
   if (userButtonState==HIGH) {
@@ -141,6 +143,19 @@ void loop() {
       statusCount = 7;
     }
   }
+
+  if (statusCount == 7){
+    buildWriteCommand();
+    Serial.print("WriteCommand: ");
+    for (int i=0; i < 32; i++){
+      Serial.print(writeRFIDData[i], HEX);
+      Serial.print(" ");
+      if (i == 31){
+        Serial.println();
+      }
+    }
+  }
+
 }
 //------------------------------------------------------**************
 
