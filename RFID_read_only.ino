@@ -7,7 +7,8 @@ unsigned char ReadStop[7] = { 0XBB, 0X00, 0X28, 0X00, 0X00, 0X28, 0X7E };
 unsigned char setModeHighSens[8] = { 0XBB, 0X00, 0XF5, 0X00, 0X01, 0X00, 0XF6, 0X7E };
 unsigned char setModeDense[8] = { 0XBB, 0X00, 0XF5, 0X00, 0X01, 0X01, 0XF7, 0X7E };
 unsigned char setRegion[8] = { 0XBB, 0X00, 0X07, 0X00, 0X01, 0X03, 0X0B, 0X7E };       // Europe
-unsigned char setPower[9] = { 0XBB, 0X00, 0XB6, 0X00, 0X02, 0X04, 0XE2, 0X9E, 0X7E };  // 26dBm - max power
+unsigned char setPower12[9] = { 0XBB, 0X00, 0XB6, 0X00, 0X02, 0X04, 0XE2, 0X9E, 0X7E }; 
+unsigned char setPower20[9] = { 0XBB, 0X00, 0XB6, 0X00, 0X02, 0X07, 0XD0, 0X8F, 0X7E };  
 
 //-------------------------------------
 // RFID Variables
@@ -57,7 +58,7 @@ const int userButton = 26;
 int userButtonState = 0;
 bool runBarInput = false;
 
-int statusCount = 0;  // Status tracking variable
+int statusCount = 0;  // Status tracking variable ----- 0: startup| 1: turned on| 2: send barcode read command| 3: scanning Barcode| 4: Barcode scanned succesfully| 5: RFID read command sent| 6: RFID read succesful| 7: Building Write command| 8: Command build succesful| 9: RFID Write command sent| 10: RFID Write succesful| 11: RFID read command sent| 12: Comparing string (RFID EPC, and barcode)| 13: RFID write correct
 int printStatusCountTimer = 500;  // Timer for printing status
 unsigned long oldMillisStatusPrinter = 0;  // Timer for status printing
 
@@ -77,9 +78,9 @@ void loop() {
     delay(200);
     Serial.write(setRegion, 8);
     delay(200);
-    Serial.write(setModeDense, 8);
+    Serial.write(setModeHighSens, 8);
     delay(200);
-    Serial.write(setPower, 9);
+    Serial.write(setPower20, 9);
     delay(200);
     setSettings = false;
   }
@@ -127,12 +128,14 @@ void loop() {
   if (statusCount == 6 && userButtonState == LOW){
     compareStrings();
     if (compareStrings()){
-      Serial.print("compareStrings uitkomt: ");
+      Serial.print("compareStrings: ");
       Serial.println(compareStrings());
+      statusCount = 14;
     }
     else {
-      Serial.print("compareStrings uitkomt: ");
+      Serial.print("compareStrings: ");
       Serial.println(compareStrings());
+      statusCount = 7;
     }
   }
 }
@@ -214,8 +217,8 @@ void readRFID() {
 
     if (isReading) {
       readData[currentReadLength] = rc;
-      if (currentReadLength == 4 && rc == 0X11) {
-        validReadLength = 4;
+      if (currentReadLength == 1 && rc == 0X02) {
+        validReadLength = 1;
         isValidRead = true;
         Serial.print("RFID: ");
         for (int i = 0; i < 32; i++) {  //Loop *lastValidReadData 64 times*
@@ -304,7 +307,7 @@ void buildWriteCommand() {
 
 	writeRFIDData[30] = generateChecksum(1, 30, writeRFIDData);
 	writeRFIDData[31] = 0X7E;
-  statusCount = 7;
+  statusCount = 8;
 }
 
 bool compareStrings() {					//Check if the read EPC code is the same as the EPC code we wanted to write
