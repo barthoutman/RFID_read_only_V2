@@ -1,39 +1,18 @@
-//-------------------------------------**
-//RFID commands
+//-------------------------------------
+// RFID Commands
 //-------------------------------------
 unsigned char ReadSingle[7] = { 0XBB, 0X00, 0X22, 0X00, 0X00, 0X22, 0X7E };
 unsigned char ReadMulti[10] = { 0XBB, 0X00, 0X27, 0X00, 0X03, 0X22, 0XFF, 0XFF, 0X4A, 0X7E };
 unsigned char ReadStop[7] = { 0XBB, 0X00, 0X28, 0X00, 0X00, 0X28, 0X7E };
 unsigned char setModeHighSens[8] = { 0XBB, 0X00, 0XF5, 0X00, 0X01, 0X00, 0XF6, 0X7E };
-unsigned char setRegion[8] = { 0XBB, 0X00, 0X07, 0X00, 0X01, 0X03, 0X0B, 0X7E };       // europe
-unsigned char setPower[9] = { 0XBB, 0X00, 0XB6, 0X00, 0X02, 0X0A, 0X28, 0XEA, 0X7E };  //26dBm- max power
-//**-----------------------------------
-//RFID commands
-//**-----------------------------------**
-int setSettings = true;  //set to true to always start with the proper settings
+unsigned char setModeDense[8] = { 0XBB, 0X00, 0XF5, 0X00, 0X01, 0X01, 0XF7, 0X7E };
+unsigned char setRegion[8] = { 0XBB, 0X00, 0X07, 0X00, 0X01, 0X03, 0X0B, 0X7E };       // Europe
+unsigned char setPower[9] = { 0XBB, 0X00, 0XB6, 0X00, 0X02, 0X04, 0XE2, 0X9E, 0X7E };  // 26dBm - max power
 
-//**-----------------------------------**
-//barInput variables
-//**-----------------------------------
-const int barPin = 27;
-int barState = LOW;
-unsigned long oldMillisBar=0;
-bool getFeedbackBar=false;
-
-unsigned char barScanCode[12];															//char that stores the imcomming data trough the barcode scanner
-unsigned char barSavedData[12];														//Saving the data out of barScanCode 
-unsigned int barCurrentReadLength=0;													//used to store the incomming data in the correct location in scanCode
-bool barIsReading=false;																//barcode has been read or not
-bool barEndOfRead=false;																//stops saving the incoming data after barCurrentReadLength == 12
-long barScanTimer=0;																		//makes a non blocking pause in the bar code scanner after it has succesfully read a code
-unsigned char epcCodeBar[12];	
-//**-----------------------------------
-//barInput variables
-//**-----------------------------------**
-
-//-------------------------------------**
-//readRFID variables
 //-------------------------------------
+// RFID Variables
+//-------------------------------------
+int setSettings = true;  // Set to true to always start with the proper settings
 unsigned char readData[32];
 unsigned char savedReadData[32];
 unsigned char readEpc[12];
@@ -47,28 +26,40 @@ int runRFID = 0;
 int runRFIDInterval = 100;
 unsigned long oldMillisRFID = 0;
 unsigned long newMillis = 0;
-bool getFeedback=true;
-//**-----------------------------------
-//readRFID variables
-//**-----------------------------------**
+bool getFeedback = true;
+//-------------------------------------
+// WriteRFID Variables
+//-------------------------------------
+unsigned char writeRFIDData[32];
+int writeTrieCounter = 0;
 
-//**-----------------------------------**
-//readRFID variables
-//**-----------------------------------
-unsigned char writeRFIDData [32];
-int writeTrieCounter=0;
-//**-----------------------------------
-//readRFID variables
-//**-----------------------------------**
+//-------------------------------------
+// Barcode Variables
+//-------------------------------------
+const int barPin = 27;
+int barState = LOW;
+unsigned long oldMillisBar = 0;
+bool getFeedbackBar = false;
 
+unsigned char barScanCode[12];  // Char that stores the incoming data through the barcode scanner
+unsigned char barSavedData[12];  // Saving the data out of barScanCode
+unsigned int barCurrentReadLength = 0;  // Used to store the incoming data in the correct location in scanCode
+bool barIsReading = false;  // Barcode has been read or not
+bool barEndOfRead = false;  // Stops saving the incoming data after barCurrentReadLength == 12
+long barScanTimer = 0;  // Makes a non-blocking pause in the barcode scanner after it has successfully read a code
 
-const int userButton=26;
-int userButtonState=0;
-bool runBarInput=false;
+unsigned char epcCodeBar[12];
 
-int statusCount = 0;                                  // 0: startup| 1: turned on| 2: send barcode read command| 3: scanning Barcode| 4: Barcode scanned succesfully| 5: RFID read command sent| 6: RFID read succesful| 7: Building Write command| 8: Command build succesful| 9: RFID Write command sent| 10: RFID Write succesful| 11: RFID read command sent| 12: Comparing string (RFID EPC, and barcode)| 13: RFID write correct 
-int printStatusCountTimer = 500;
-unsigned long oldMillisStatusPrinter = 0;
+//-------------------------------------
+// User Button and Status Variables
+//-------------------------------------
+const int userButton = 26;
+int userButtonState = 0;
+bool runBarInput = false;
+
+int statusCount = 0;  // Status tracking variable
+int printStatusCountTimer = 500;  // Timer for printing status
+unsigned long oldMillisStatusPrinter = 0;  // Timer for status printing
 
 void setup() {
   pinMode(barPin,OUTPUT);
@@ -86,7 +77,7 @@ void loop() {
     delay(200);
     Serial.write(setRegion, 8);
     delay(200);
-    Serial.write(setModeHighSens, 8);
+    Serial.write(setModeDense, 8);
     delay(200);
     Serial.write(setPower, 9);
     delay(200);
@@ -94,106 +85,67 @@ void loop() {
   }
   //-----------------------------------------------------preload settings************
 
-   if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
+  if (newMillis - oldMillisStatusPrinter >= printStatusCountTimer) {
     runRFID = 1;
     oldMillisStatusPrinter = newMillis; 
-    Serial.print("statusCount: ");
-    Serial.println(statusCount);  
- //   if (!compareStrings()) {
- //     Serial.print("compareStrings: ");
- //     Serial.println(compareStrings());
- //   }
+    Serial.println(statusCount);
   }
-
-  if (statusCount == 6) {
-    buildWriteCommand();
-    delay(50);
-  }
-
-  if (statusCount < 1) {
-    statusCount = 1;
-  }
+ 
+  if (statusCount < 1) statusCount = 1;
 
   userButtonState = digitalRead(userButton);
-  
-  if (userButtonState == HIGH) {
-    runBarInput = true;
+  if (userButtonState==HIGH) {
+    runBarInput=true;
     barInput();
-    if (statusCount == 1) {
-      statusCount = 2;
-    }
+    if (statusCount==1)statusCount = 2;
   }
 
-  if (userButtonState == LOW) {
-    runBarInput = false;
+  if (userButtonState==LOW) {
+    runBarInput=false;
     digitalWrite(barPin, LOW);
   }
 
-  if (statusCount == 4 && userButtonState == LOW) {
+  if (statusCount == 4 && userButtonState == LOW){
     Serial2.write(ReadSingle, 7);
     readRFID();
     delay(10);
     runRFID = 0;
     int isSent = 1;
 
-    if (isSent == 1) {
+    if (isSent==1){
       oldMillisRFID = newMillis;
     }
 
     if (newMillis - oldMillisRFID >= runRFIDInterval) {
       runRFID = 1;
       oldMillisRFID = newMillis; 
-      if (statusCount == 4) {
-        statusCount = 5;
-      }
-      isSent = 0; // Corrected from isSent==0;
+      if (statusCount==4)statusCount = 5;
+      isSent = 0;
     }
   }
 
-  if (statusCount == 7 && userButtonState == LOW) {
-    Serial.print("WriteRFIDData: ");
-    for (int i = 0; i < 32; i++) {
-      Serial.print(writeRFIDData[i], HEX);
-      Serial.print(" ");
-      if (i == 31) {
-        Serial.println();
-        statusCount = 8;
-      }
+  if (statusCount == 6 && userButtonState == LOW){
+    compareStrings();
+    if (compareStrings()){
+      Serial.print("compareStrings uitkomt: ");
+      Serial.println(compareStrings());
     }
-  }    
-
-if (statusCount == 8 && userButtonState == LOW) {
-    Serial2.write(writeRFIDData, 32);
-    delay(200);
-    Serial2.write(ReadSingle, 7);
-    readRFID();
-//    compareStrings();
-    writeTrieCounter++;
-
-    if (writeTrieCounter >= 25) {
-      Serial.println("Error: Writing RFID data failed.");
-      statusCount = 1;
-      writeTrieCounter = 0;
+    else {
+      Serial.print("compareStrings uitkomt: ");
+      Serial.println(compareStrings());
     }
   }
-/*
-  if (compareStrings() && writeTrieCounter >= 1) {
-    statusCount = 1;
-    writeTrieCounter = 0;
-    Serial.print("EPC after write: ");
-    for (int i3 = 0; i3 < 12; i3++) {
-      Serial.print(savedReadData[i3 + 8], HEX);
-      Serial.print(" ");
-      if (i3 == 11) {
-        Serial.println();
-      }
-    }
-  }
-*/
 }
 //------------------------------------------------------**************
 
 void barInput(){
+/*
+  if (newMillis - oldMillisBar >= 10000 && barPin == HIGH) {
+    digitalWrite(barPin, LOW);
+    delay(50);
+    oldMillisBar = newMillis;
+  }
+*/
 
   if(runBarInput==true){
     digitalWrite(barPin, HIGH);
@@ -262,8 +214,8 @@ void readRFID() {
 
     if (isReading) {
       readData[currentReadLength] = rc;
-      if (currentReadLength == 1 && rc == 0X02) {
-        validReadLength = 1;
+      if (currentReadLength == 4 && rc == 0X11) {
+        validReadLength = 4;
         isValidRead = true;
         Serial.print("RFID: ");
         for (int i = 0; i < 32; i++) {  //Loop *lastValidReadData 64 times*
@@ -272,17 +224,6 @@ void readRFID() {
         savedReadData[0] = 0XBB;  //Write header to lastValidReadData 0XAA
       }
       if (isValidRead) {                      //If incomming data is valid
-        /*
-        if (currentReadLength == 4 && rc == 0X15){
-          for (int i = 0; i < 32; i++) 
-            {readData[i] = 0X00;}
-          statusCount = 1;
-          validReadLength = 1;
-          Serial2.flush();
-          isValidRead = false;
-          isReading = false;
-        }
-        */
         savedReadData[validReadLength] = rc;  //Taking the data form *LastValidReadData and putting it in *rc at the position decided by currentReadLength
         if(getFeedback==true){
           Serial.print(savedReadData[validReadLength], HEX);
@@ -315,7 +256,7 @@ void readRFID() {
       savedValidRead = 1;
       isReading = false;
     }
-    delay(3);
+    delay(2);
     Serial2.flush();
     if(getFeedback==true){
       Serial.flush();
@@ -365,11 +306,10 @@ void buildWriteCommand() {
 	writeRFIDData[31] = 0X7E;
   statusCount = 7;
 }
-/*
+
 bool compareStrings() {					//Check if the read EPC code is the same as the EPC code we wanted to write
 	for(int i = 0; i < 12; i++) {													//Loop through the whole length one by one
 		if(readEpc[i] != epcCodeBar[i]) return false;												//If the single char in the current specific location in the read string is not the same as the single char in the written string *compareString is false
 	}
 	return true;																		//if *c1 and *c2 ar true. *compareString is true
 }
-*/
