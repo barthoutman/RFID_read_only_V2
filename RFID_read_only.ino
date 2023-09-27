@@ -400,7 +400,7 @@ void buildWriteCommand()
   writeRFIDData[1] = 0X00; // Type
   writeRFIDData[2] = 0X49; // Command (write)
   writeRFIDData[3] = 0X00; // Parameter length (1/2) Length from Passcode 1/4 up to the end of the EPC
-  writeRFIDData[4] = 0X19; // Parameter length (2/2) Total length is 25 -> Hex 0X19
+  writeRFIDData[4] = 0X19; // Parameter length (2/2) Total length is 25 -> Hex 0X19 (passcode 1/4 up to the end of the EPC)
 
   writeRFIDData[5] = 0X00; // Passcode 1/4
   writeRFIDData[6] = 0X00; // Passcode 2/4
