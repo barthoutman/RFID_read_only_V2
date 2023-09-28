@@ -73,6 +73,8 @@ void setup()
   delay(100);
   Serial2.begin(115200);
   delay(100);
+  Serial.println();
+  Serial.println("Barcode RFID programmer started");
 }
 
 void loop()
@@ -96,6 +98,7 @@ void loop()
   {
     runRFID = 1;
     oldMillisStatusPrinter = newMillis;
+    Serial.print("statusCount: ");
     Serial.println(statusCount);
   }
 
@@ -118,6 +121,11 @@ void loop()
   {
     runBarInput = false;
     digitalWrite(barPin, LOW);
+  }
+
+    if (statusCount == 2 && userButtonState == LOW)
+  {
+    statusCount = 1;
   }
 
   if (statusCount == 4 && userButtonState == LOW)
