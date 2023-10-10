@@ -38,6 +38,7 @@ int writeTrieCounter = 0;
 // Barcode Variables
 //-------------------------------------
 const int barPin = 27;
+const int beepPin = 34;
 int barState = LOW;
 unsigned long oldMillisBar = 0;
 bool getFeedbackBar = false;
@@ -66,6 +67,7 @@ void setup()
 {
   // Initialize GPIO pins
   pinMode(barPin, OUTPUT);
+  pinMode(beepPin, OUTPUT);
   pinMode(userButton, INPUT_PULLDOWN);
 
   // Initialize Serial communication
@@ -218,6 +220,7 @@ void loop()
   if (statusCount == 14)
   {
     Serial.print("Write succesfull: ");
+    digitalWrite(beepPin, HIGH);
     for (int i =0; i < 12; i++){
       Serial.print(readEpc[i], HEX);
       Serial.print(" ");
@@ -226,6 +229,7 @@ void loop()
       }
     }
     delay(200);
+    digitalWrite(beepPin, LOW);
     statusCount = 1;
   }
 
