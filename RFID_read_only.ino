@@ -55,7 +55,7 @@ unsigned char epcCodeBar[12];
 // User Button and Status Variables
 //-------------------------------------
 const int userButton = 26;
-const int beepPin = 13;
+const int beepPin = 2;
 int userButtonState = 0;
 bool runBarInput = false;
 
