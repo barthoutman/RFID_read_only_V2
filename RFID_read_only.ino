@@ -38,7 +38,6 @@ int writeTrieCounter = 0;
 // Barcode Variables
 //-------------------------------------
 const int barPin = 27;
-const int beepPin = 34;
 int barState = LOW;
 unsigned long oldMillisBar = 0;
 bool getFeedbackBar = false;
@@ -56,6 +55,7 @@ unsigned char epcCodeBar[12];
 // User Button and Status Variables
 //-------------------------------------
 const int userButton = 26;
+const int beepPin = 13;
 int userButtonState = 0;
 bool runBarInput = false;
 
@@ -68,13 +68,16 @@ void setup()
   // Initialize GPIO pins
   pinMode(barPin, OUTPUT);
   pinMode(beepPin, OUTPUT);
+  digitalWrite(beepPin, LOW);
   pinMode(userButton, INPUT_PULLDOWN);
 
   // Initialize Serial communication
   Serial.begin(9600);
+  digitalWrite(beepPin, HIGH);
   delay(100);
   Serial2.begin(115200);
   delay(100);
+  digitalWrite(beepPin, LOW);
   Serial.println();
   Serial.println("Barcode RFID programmer started");
 }
@@ -220,7 +223,6 @@ void loop()
   if (statusCount == 14)
   {
     Serial.print("Write succesfull: ");
-    digitalWrite(beepPin, HIGH);
     for (int i =0; i < 12; i++){
       Serial.print(readEpc[i], HEX);
       Serial.print(" ");
@@ -228,6 +230,8 @@ void loop()
         Serial.println();
       }
     }
+    digitalWrite(beepPin, HIGH);
+    Serial.println("Beep");
     delay(200);
     digitalWrite(beepPin, LOW);
     statusCount = 1;
